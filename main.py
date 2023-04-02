@@ -2,36 +2,48 @@ import csv
 import matplotlib.pyplot as plt
 from datetime import datetime
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 
-#Read in the CSV File
-with open('1679526000-1679612399-datapoint_3291.csv') as csvfile:
-    data = list(csv.reader(csvfile, delimiter=","))
+def main():
+    # Read in the CSV and get the data ready
+    timestamplist, valuelist = get_the_data_ready()
+
+    # Check the occupancy
+    testlist = check_occupancy(timestamplist, valuelist, 10)
+
+    # Show us the magic
+    plot_double_graph(timestamplist, valuelist, testlist)
 
 
-#Convert from string to float
-for row in data[1:]:
-    #Convert from string to int
-    row[0] = int(row[0])
-    #Convert from int to timestamp
-    row[0] = datetime.utcfromtimestamp(row[0]).strftime('%Y-%m-%d %H:%M:%S ')
-    #Convert from string to float
-    row[1] = float(row[1])
+def get_the_data_ready():
+    #Read in the CSV File
+    with open('1679526000-1679612399-datapoint_3291.csv') as csvfile:
+        data = list(csv.reader(csvfile, delimiter=","))
 
 
-#Seperate into two different lists
-timestamplist = []
-valuelist = []
-for datas in data:
-    timestamplist.append(datas[0])
-    valuelist.append(datas[1])
-    #print(datas[0], datas[1])
+    #Convert from string to int, float and datetime
+    for row in data[1:]:
+        #Convert from string to int
+        row[0] = int(row[0])
+        #Convert from int to timestamp
+        #row[0] = datetime.utcfromtimestamp(row[0]).strftime('%Y-%m-%d %H:%M:%S ')
+        #Convert from string to float
+        row[1] = float(row[1])
 
 
-#Pop the headers
-timestamplist.pop(0)
-valuelist.pop(0)
-print(timestamplist)
+    #Seperate the csv data into two different lists
+    timestamplist = []
+    valuelist = []
+    for datas in data:
+        timestamplist.append(datas[0])
+        valuelist.append(datas[1])
+
+
+    #Remove the headers to only get workable data
+    timestamplist.pop(0)
+    valuelist.pop(0)
+    return timestamplist, valuelist
 
 
 def plot_double_graph(timestamplist, valuelist, testlist):
@@ -43,7 +55,10 @@ def plot_double_graph(timestamplist, valuelist, testlist):
     ax1.plot(timestamplist, valuelist, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
 
-    # Get values for the x-axis
+    """
+    It automatically places every timestamp on the x-axis, so we have to calculate ourself what we put on it. 
+    We do this every 20% meaning we get 6 points on the x-axis.
+    """
     listlen = len(timestamplist)
     point0 = timestamplist[1]
     point1 = timestamplist[round(listlen / 100 * 20)]
@@ -64,35 +79,45 @@ def plot_double_graph(timestamplist, valuelist, testlist):
     ax2.tick_params(axis='y', labelcolor=color)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.show()
+    plt.show() # Show us the Magic
 
 
-testlist = []
-for item in valuelist:
-    if item < 500:
-        testlist.append(0)
-    else:
-        testlist.append(1)
+def check_occupancy(timestamplist, valuelist, windowsize):
+    testlist = []
+    x = 0
+    while x in range(len(timestamplist)):
+        # Get the average of the CO2 Values
+        sum_check_list = sum(valuelist[x:x + windowsize]) / windowsize
+        # Set the CO2 Values in a Numpy Array
+        check_list = np.array(valuelist[x:x + windowsize])
+        # Set the timestamps in a Numpy Array
+        check_time_list = np.array(timestamplist[x:x + windowsize]).reshape((-1, 1))
+        # Make an instance of LinearRegression and fit the Values in it
+        model = LinearRegression().fit(check_time_list, check_list)
+        # Score the Model
+        r_sq = model.score(check_time_list, check_list)
+        # Get the Coefficient
+        line_slope = model.coef_
 
 
-#plot_double_graph(timestamplist, valuelist, testlist)
+        # If average CO2 values are below 500 or the slope is negative fill the list with zeros
+        if sum_check_list < 500 or line_slope < 0:
+            l = [0] * windowsize
+            #counter += 1
+            testlist = testlist + l
+        elif line_slope >= 0: # If line is positive fill with 1's
+            l = [1] * windowsize
+            #counter += 4
+            testlist = testlist + l
 
-testlist = []
-x = 0
-while x in range(len(timestamplist)):
-    check_list = valuelist[x:x+10]
-    sum_check_list = sum(check_list)
-    if (sum_check_list / 10) < 500:
-        l = [0] * 10
-        testlist = testlist + l
-    elif (sum(valuelist[x:x+10]) / 10) >= 500:
-        l = [1] * 10
-        testlist = testlist + l
-    x += 10
+        x += windowsize # Slide the window
 
-
-while len(testlist) > len(timestamplist):
-    testlist.pop()
+    # We now fill the window EVERY time with 10 values, so pop the last values until the lists match in size
+    while len(testlist) > len(timestamplist):
+        testlist.pop()
+    return testlist
 
 
-plot_double_graph(timestamplist, valuelist, testlist)
+if __name__ == "__main__":
+    main()
+
