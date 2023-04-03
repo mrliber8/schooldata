@@ -98,8 +98,19 @@ def check_occupancy(timestamplist, valuelist, windowsize):
         r_sq = model.score(check_time_list, check_list)
         # Get the Coefficient
         line_slope = model.coef_
+        print(timestamplist[x], line_slope, 1/line_slope)
 
 
+        if sum_check_list > 800 or (line_slope >= 0 and sum_check_list > 500):
+            # If line is positive fill with 1's
+            l = [1] * windowsize
+            testlist = testlist + l
+        elif sum_check_list <= 500 or line_slope < 0:
+            # If average CO2 values are below 500 or the slope is negative fill the list with zeros
+            l = [0] * windowsize
+            testlist = testlist + l
+
+        """
         # If average CO2 values are below 500 or the slope is negative fill the list with zeros
         if sum_check_list < 500 or line_slope < 0:
             l = [0] * windowsize
@@ -109,7 +120,7 @@ def check_occupancy(timestamplist, valuelist, windowsize):
             l = [1] * windowsize
             #counter += 4
             testlist = testlist + l
-
+        """
         x += windowsize # Slide the window
 
     # We now fill the window EVERY time with 10 values, so pop the last values until the lists match in size
