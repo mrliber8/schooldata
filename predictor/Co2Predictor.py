@@ -43,16 +43,16 @@ class Co2Predictor:
         # Setup the predictive model
         rf = RandomForestRegressor(random_state=10, max_depth=10)
         rf.fit(train_X, train_y)
-        predicted_val_X = rf.predict(val_X)
+        predicted_val_y = rf.predict(val_X)
                 
         # If validation dataframe has a Co2 value, then compared the prediction to the actual value
         if "value" in validation_df:
-            rf_val_mae = mean_absolute_error(val_y, predicted_val_X)
+            rf_val_mae = mean_absolute_error(val_y, predicted_val_y)
             print(rf_val_mae)
 
-            self.chart_comparison(val_y, predicted_val_X, validation_df)
+            self.chart_comparison(val_y, predicted_val_y, validation_df)
 
-        return predicted_val_X
+        return predicted_val_y
 
     def filter_unused_features(self, df):
         """
@@ -64,13 +64,13 @@ class Co2Predictor:
                 filtered_features.append(feature)
         return filtered_features
 
-    def chart_comparison(self, val_y, predicted_val_X, df):
+    def chart_comparison(self, val_y, predicted_val_y, df):
         """
         Creates and shows a chart displaying the predicted Co2 vs the actual values
         """
 
         plt.plot(val_y)
-        plt.plot(predicted_val_X)
+        plt.plot(predicted_val_y)
         plt.ylabel('CO2 Measurement in PPM')
         plt.xlabel('Timestamp')
         listlen = len(df) - 1
