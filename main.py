@@ -25,8 +25,6 @@ def main():
     train_df = df_man.prepare_dataframe("csv/train.csv")
     validation_df = df_man.prepare_dataframe("csv/validation.csv")
 
-    print(train_df.head())
-
     pred.predict(train_df, validation_df)
 
 
@@ -62,39 +60,39 @@ def main():
 
 
 # def plot_double_graph(timestamplist, valuelist, testlist):
-    fig, ax1 = plt.subplots()
+    # fig, ax1 = plt.subplots()
 
-    color = 'tab:red'
-    ax1.set_xlabel('Time in Unix-timestamps')
-    ax1.set_ylabel('CO2 Measurement in PPM', color=color)
-    ax1.plot(timestamplist, valuelist, color=color)
-    ax1.tick_params(axis='y', labelcolor=color)
+    # color = 'tab:red'
+    # ax1.set_xlabel('Time in Unix-timestamps')
+    # ax1.set_ylabel('CO2 Measurement in PPM', color=color)
+    # ax1.plot(timestamplist, valuelist, color=color)
+    # ax1.tick_params(axis='y', labelcolor=color)
 
-    """
-    It automatically places every timestamp on the x-axis, so we have to calculate ourself what we put on it. 
-    We do this every 20% meaning we get 6 points on the x-axis.
-    """
-    listlen = len(timestamplist)
-    point0 = timestamplist[1]
-    point1 = timestamplist[round(listlen / 100 * 20)]
-    point2 = timestamplist[round(listlen / 100 * 40)]
-    point3 = timestamplist[round(listlen / 100 * 60)]
-    point4 = timestamplist[round(listlen / 100 * 80)]
-    point5 = timestamplist[-1]
+    # """
+    # It automatically places every timestamp on the x-axis, so we have to calculate ourself what we put on it. 
+    # We do this every 20% meaning we get 6 points on the x-axis.
+    # """
+    # listlen = len(timestamplist)
+    # point0 = timestamplist[1]
+    # point1 = timestamplist[round(listlen / 100 * 20)]
+    # point2 = timestamplist[round(listlen / 100 * 40)]
+    # point3 = timestamplist[round(listlen / 100 * 60)]
+    # point4 = timestamplist[round(listlen / 100 * 80)]
+    # point5 = timestamplist[-1]
 
-    # Set values for the x and y-axis
-    fig.gca().set_xticks([point0, point1, point2, point3, point4, point5])
+    # # Set values for the x and y-axis
+    # fig.gca().set_xticks([point0, point1, point2, point3, point4, point5])
 
-    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    # ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
 
-    color = 'tab:blue'
-    ax2.set_ylabel('Is the average CO2 below or above 500? Window = 20 Min', color=color)  # we already handled the x-label with ax1
-    ax2.plot(timestamplist, testlist, color=color)
-    ax2.tick_params(axis='y', labelcolor=color)
+    # color = 'tab:blue'
+    # ax2.set_ylabel('Is the average CO2 below or above 500? Window = 20 Min', color=color)  # we already handled the x-label with ax1
+    # ax2.plot(timestamplist, testlist, color=color)
+    # ax2.tick_params(axis='y', labelcolor=color)
 
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.show() # Show us the Magic
+    # fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    # plt.show() # Show us the Magic
 
 
 # def check_occupancy(timestamplist, valuelist, windowsize):

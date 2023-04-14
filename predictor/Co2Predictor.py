@@ -29,7 +29,6 @@ class Co2Predictor:
         # Filter features that are not in the validation dataframe
         # Filtering is needed when a prediction is only need for a specific couple of months
         filtered_features = self.filter_unused_features(validation_df)
-        print(filtered_features)
 
         # Create the X's and y's for the train and validation for the predictive model
         train_y = train_df.value
@@ -48,7 +47,7 @@ class Co2Predictor:
         # If validation dataframe has a Co2 value, then compared the prediction to the actual value
         if "value" in validation_df:
             rf_val_mae = mean_absolute_error(val_y, predicted_val_X)
-            print(rf_val_mae)
+            print("Gemmidelde absolute afwijking: ", rf_val_mae)
 
             self.chart_comparison(val_y, predicted_val_X, validation_df)
 
