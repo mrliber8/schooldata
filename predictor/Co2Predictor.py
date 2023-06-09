@@ -31,11 +31,11 @@ class Co2Predictor:
         filtered_features = self.filter_unused_features(validation_df)
 
         # Create the X's and y's for the train and validation for the predictive model
-        train_y = train_df.value
+        train_y = train_df.co2
         train_X = train_df[filtered_features]
         # If validation dataframe has a Co2 value, then compared the prediction to the actual value
-        if "value" in validation_df:
-            val_y = validation_df.value
+        if "co2" in validation_df:
+            val_y = validation_df['co2'].to_numpy()
         val_X = validation_df[filtered_features]
 
 
@@ -45,12 +45,11 @@ class Co2Predictor:
         predicted_val_y = rf.predict(val_X)
                 
         # If validation dataframe has a Co2 value, then compared the prediction to the actual value
-        if "value" in validation_df:
+        if "co2" in validation_df:
             rf_val_mae = mean_absolute_error(val_y, predicted_val_y)
             print("Gemmidelde absolute afwijking: ", rf_val_mae)
 
             self.chart_comparison(val_y, predicted_val_y, validation_df)
-
         return predicted_val_y
 
     def filter_unused_features(self, df):
@@ -77,9 +76,10 @@ class Co2Predictor:
         # Creates the ticks on the X-axis
         points = []
         ticks = []
-        for i in range(13):
-            points.append(df.timestamp[round(listlen / 12 * i)][:10])
-            ticks.append(round(listlen / 12 * i))
+        tick_count = 13
+        for i in range(tick_count):
+            points.append(str(df.iloc[round(listlen / (tick_count - 1) * i)].name)[:10])
+            ticks.append(round(listlen / (tick_count - 1) * i))
         plt.xticks(ticks, points)
 
         plt.show()

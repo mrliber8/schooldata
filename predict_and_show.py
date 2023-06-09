@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -40,7 +41,11 @@ class predict_and_show:
             # Get the Coefficient
             line_slope = model.coef_
             # Print the values
-            print(df['timestamp'][x], line_slope, 1/line_slope)
+            for x in df['timestamp']:
+                # print(type(x))
+                # dt = datetime.datetime(int(x[:4]), int(x[5:7]), int(x[8:10]), int(x[11:13]), int(x[14:16]), int(x[17:19]))
+                
+                print((x - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s'))
 
 
             if average_co2 > 800 or (line_slope >= 0 and average_co2 > 500):
