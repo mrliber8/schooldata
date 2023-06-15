@@ -14,13 +14,14 @@ from kpi_calculator.KPICalculator import KPICalculator
 
 
 class SchemeGenerator:
-    def __init__(self) -> None:
+    def __init__(self, occupancy_threshold) -> None:
+        self.OCCUPANCY_THRESHOLD = occupancy_threshold
         self.DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
 
     def generate_scheme(self, df):
         # We specify the days of a week because the api returns the days of the week out of order
-        kpi_calculator = KPICalculator()
+        kpi_calculator = KPICalculator(self.OCCUPANCY_THRESHOLD)
         scheme = []
         # df.to_csv('out.csv')
         for day in self.DAYS:
@@ -28,12 +29,12 @@ class SchemeGenerator:
             best_comfort_timespan = []
 
             for index in range(len(df.loc[day])):
-                if df.loc[day].iloc[index].occupancy > 0.5:
+                if df.loc[day].iloc[index].occupancy > self.OCCUPANCY_THRESHOLD:
                     first_non_zero_value_index = round(index/5)
                     break
 
             for index in range(len(df.loc[day]) - 1, -1, -1):
-                if df.loc[day].iloc[index].occupancy > 0.5:
+                if df.loc[day].iloc[index].occupancy > self.OCCUPANCY_THRESHOLD:
                     last_non_zero_value_index = round(index/5)
                     break
 
@@ -60,7 +61,7 @@ class SchemeGenerator:
         weekly_occupancy = []
         top_line = [1] * 5040
         bottom_line = [0] * 5040
-        format_line = ([1, 0] + [.5] * 718) * 7
+        format_line = ([1, 0] + [self.OCCUPANCY_THRESHOLD] * 718) * 7
         scheme_line = []
         for scheme_day in scheme:
             scheme_line.extend([0] * scheme_day[0]
@@ -73,9 +74,9 @@ class SchemeGenerator:
             weekly_occupancy.extend(df.loc[day]['occupancy'].tolist())
         
         plt.plot(format_line, 'red', linewidth = .5)
-        plt.plot(weekly_occupancy, 'green')
+        plt.plot(weekly_occupancy, 'blue')
         plt.fill_between(range(5040), scheme_line, bottom_line, color = 'yellow', alpha = .5)
-        plt.fill_between(range(5040), scheme_line, top_line, color = 'blue', alpha = .3)
+        plt.fill_between(range(5040), scheme_line, top_line, color = 'green', alpha = .3)
         tick_names = [[day[:3], '6:00', '12:00', '18:00'] for day in self.DAYS]
         tick_names = [item for sublist in tick_names for item in sublist]
         ticks = [x * 180 for x in range(28)]

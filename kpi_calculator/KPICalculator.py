@@ -6,9 +6,15 @@ from climatics_client.retrieve import Retriever
 
 import requests
 
+from room_prediction.prediction import Prediction
+
 
 class KPICalculator:
-    def __init__(self) -> None:
+    def __init__(self, occupancy_threshold) -> None:
+        # The percentage of occupancy when you want to use cofort mode rather than eco.
+        # In other words, setting this to .5 means that kpi calculator gives more score to eco mode
+        #  when the occupancy is lower than 50% and more score to comfort mode when the occupancy is higher than 50%
+        self.OCCUPANCY_THRESHOLD = occupancy_threshold
         pass
 
     def calculate_kpi(self, df):
@@ -50,6 +56,9 @@ class KPICalculator:
         """
         Derives the occupancy from the co2 values
         """
+        # occupancy_predictor = Prediction()
+        # df = occupancy_predictor.main(df)
+        # df = df.rename(columns={'in_room': 'occupancy'})
         df['occupancy'] = [int(x > 500) for x in df[df.columns[0]]]
         del df[df.columns[0]]
 
@@ -124,9 +133,9 @@ class KPICalculator:
         print()
         score = 0
         for occupancy in total_occupancy_comfort:
-            score -= occupancy
+            score -= self.calculated_score_by_measurement(occupancy)
         for occupancy in total_occupancy_eco:
-            score += occupancy
+            score += self.calculated_score_by_measurement(occupancy)
         score += len(total_occupancy_comfort)
         score /= len(total_occupancy_comfort) + len(total_occupancy_eco)
         print('Score: ', score)
@@ -144,16 +153,22 @@ class KPICalculator:
     def score_generated_scheme(self, df, start, end):
         score = 0
         for occupancy in df[:start].occupancy:
-            score -= occupancy
+            score -= self.calculated_score_by_measurement(occupancy)
         for occupancy in df[start:end].occupancy:
-            score += occupancy
+            score += self.calculated_score_by_measurement(occupancy)
         for occupancy in df[end:].occupancy:
-            score -= occupancy
+            score -= self.calculated_score_by_measurement(occupancy)
         score += len(df[:start]) + len(df[end:])
         score /= len(df)
         # print (score)
         return score 
 
+    def calculated_score_by_measurement(self, occupancy):
+        if occupancy < self.OCCUPANCY_THRESHOLD:
+            return occupancy / self.OCCUPANCY_THRESHOLD / 2
+        else:
+            return (occupancy - self.OCCUPANCY_THRESHOLD) / (1 - self.OCCUPANCY_THRESHOLD) / 2 + .5
+        
 
 
 
