@@ -16,7 +16,7 @@ class DataframeManipulator:
 
         Returns the dataframe
         """
-        df.rename(columns={df.columns[0]: 'co2'}, inplace=True)
+        # df.rename(columns={df.columns[0]: 'co2'}, inplace=True)
         self.split_datetime(df)
         df = self.one_hot_encode(df, "month")
         df = self.one_hot_encode(df, "day")
