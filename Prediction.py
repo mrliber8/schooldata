@@ -3,10 +3,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
+from datetime import datetime
+
 
 # Import the CSV file
 df = pd.read_csv('27feb-31maart.csv')
