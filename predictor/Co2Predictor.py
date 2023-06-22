@@ -1,8 +1,7 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, accuracy_score
+
 
 class Co2Predictor:
     def __init__(self) -> None: 

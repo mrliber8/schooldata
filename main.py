@@ -2,22 +2,13 @@ from kpi_calculator.KPICalculator import KPICalculator
 from kpi_calculator.SchemeGenerator import SchemeGenerator
 from predictor.Co2Predictor import Co2Predictor
 from predictor.DataframeManipulator import DataframeManipulator
-import csv
-import matplotlib.pyplot as plt
 import datetime
 import time
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from predict_and_show import predict_and_show as pas
 from climatics_client.retrieve import Retriever
-import pprint
-import arrow
-from climatics_client.utils import get_timestamps_of_date
-from var_dump import var_dump
-import requests
 
 
 def main():
+    start = time.time()
     # Train dataframe
     t_start = int(time.mktime(datetime.datetime(2022, 1, 1).timetuple()))
     t_end = int(time.mktime(datetime.datetime(2023, 1, 1).timetuple()))
@@ -62,6 +53,9 @@ def main():
         scheme_generator = SchemeGenerator(OCCUPANCY_THRESHOLD)
         scheme_generator.generate_scheme(df)
         print()
+
+    end = time.time()
+    print("Elapsed time in seconds of the main function is: ", end - start)
 
 if __name__ == "__main__":
     main()

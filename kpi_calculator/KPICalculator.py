@@ -1,12 +1,5 @@
-import pandas as pd
 import datetime
-
-from var_dump import var_dump
-from climatics_client.retrieve import Retriever
-
 import requests
-
-from room_prediction.prediction import Prediction
 
 
 class KPICalculator:

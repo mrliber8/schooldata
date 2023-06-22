@@ -1,15 +1,5 @@
-import time
 import pandas as pd
-import datetime
-
-import numpy as np
 import matplotlib.pyplot as plt
-
-from var_dump import var_dump
-from climatics_client.retrieve import Retriever
-
-import requests
-
 from kpi_calculator.KPICalculator import KPICalculator
 
 
