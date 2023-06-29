@@ -2,6 +2,7 @@ from kpi_calculator.KPICalculator import KPICalculator
 from kpi_calculator.SchemeGenerator import SchemeGenerator
 from predictor.Co2Predictor import Co2Predictor
 from predictor.DataframeManipulator import DataframeManipulator
+from predictor.PredictionCO2 import CO2PredictionModel
 import datetime
 import time
 from climatics_client.retrieve import Retriever
@@ -37,8 +38,8 @@ def main():
 
     if x[0]:
         print("Prediction results:")
-        pred = CO2PredictionModel()
-        pred.predict(train_df, validation_df)
+        w = CO2PredictionModel()
+        w.predict(train, validation)
         print()
 
     if x[1]:
