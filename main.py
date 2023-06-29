@@ -21,7 +21,7 @@ def main():
     sensor_id = 3137
 
     # Whether you want to predict co2 values, calculate kpi or both
-    x = [False, True]
+    x = [False, False, True]
 
     # The percentage of occupancy when you want to use cofort mode rather than eco.
     # In other words, setting this to .5 means that kpi calculator gives more score to eco mode
@@ -37,6 +37,12 @@ def main():
 
     if x[0]:
         print("Prediction results:")
+        pred = CO2PredictionModel()
+        pred.predict(train_df, validation_df)
+        print()
+
+    if x[1]:
+        print("Prediction results:")
         df_man = DataframeManipulator()
         pred = Co2Predictor()
 
@@ -46,7 +52,7 @@ def main():
         pred.predict(train_df, validation_df)
         print()
 
-    if x[1]:
+    if x[2]:
         print("Kpi results:")
         kpi_calculator = KPICalculator(OCCUPANCY_THRESHOLD)
         df = kpi_calculator.calculate_kpi(train)
