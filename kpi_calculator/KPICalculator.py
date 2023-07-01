@@ -58,9 +58,6 @@ class KPICalculator:
         """
         Derives the occupancy from the co2 values
         """
-<<<<<<< HEAD
-        df['occupancy'] = [int(x > 500) for x in df[df.columns[0]]]
-=======
         # occupancy_predictor = Prediction()
         # df = occupancy_predictor.main(df)
         # df = df.rename(columns={'in_room': 'occupancy'})
@@ -83,7 +80,6 @@ class KPICalculator:
         #df['occupancy'] = [int(x > 500) for x in df[df.columns[0]]]
         df = df.drop('rolling_mean', axis=1)
         df = df.drop('rolling_median', axis=1)
->>>>>>> a3657e73ccc4957d5fa5f68ebbb1e45c65b4e6ff
         del df[df.columns[0]]
 
     def group_by_weekdays(self, df):
