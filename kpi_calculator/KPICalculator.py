@@ -1,12 +1,5 @@
-import pandas as pd
 import datetime
-
-from var_dump import var_dump
-from climatics_client.retrieve import Retriever
-
 import requests
-
-from room_prediction.prediction import Prediction
 
 
 class KPICalculator:
@@ -65,7 +58,32 @@ class KPICalculator:
         """
         Derives the occupancy from the co2 values
         """
+<<<<<<< HEAD
         df['occupancy'] = [int(x > 500) for x in df[df.columns[0]]]
+=======
+        # occupancy_predictor = Prediction()
+        # df = occupancy_predictor.main(df)
+        # df = df.rename(columns={'in_room': 'occupancy'})
+
+        # Set the window Size and the CO2 treshold
+        window_size = 30
+        co2_threshold = 500
+
+        # Calculate the rolling mean and median
+        df['rolling_mean'] = df['co2'].rolling(window=window_size, min_periods=1).mean()
+        df['rolling_median'] = df['co2'].rolling(window=window_size, min_periods=1).median()
+
+        # Condition to determine if someone is in the room
+        condition = (df['co2'] > co2_threshold) & (df['rolling_mean'] > co2_threshold) & (
+                    df['rolling_median'] > co2_threshold)
+
+        # Set the value as an int
+        df['occupancy'] = condition.astype(int)
+
+        #df['occupancy'] = [int(x > 500) for x in df[df.columns[0]]]
+        df = df.drop('rolling_mean', axis=1)
+        df = df.drop('rolling_median', axis=1)
+>>>>>>> a3657e73ccc4957d5fa5f68ebbb1e45c65b4e6ff
         del df[df.columns[0]]
 
     def group_by_weekdays(self, df):

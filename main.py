@@ -2,22 +2,14 @@ from kpi_calculator.KPICalculator import KPICalculator
 from kpi_calculator.SchemeGenerator import SchemeGenerator
 from predictor.Co2Predictor import Co2Predictor
 from predictor.DataframeManipulator import DataframeManipulator
-import csv
-import matplotlib.pyplot as plt
+from predictor.PredictionCO2 import CO2PredictionModel
 import datetime
 import time
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from predict_and_show import predict_and_show as pas
 from climatics_client.retrieve import Retriever
-import pprint
-import arrow
-from climatics_client.utils import get_timestamps_of_date
-from var_dump import var_dump
-import requests
 
 
 def main():
+    start = time.time()
     # Train dataframe
     T_START = int(time.mktime(datetime.datetime(2022, 1, 1).timetuple()))
     T_END = int(time.mktime(datetime.datetime(2023, 1, 1).timetuple()))
@@ -36,7 +28,7 @@ def main():
     SCHEME_ID = 87
 
     # Whether you want to predict co2 values, calculate kpi or both
-    x = [False, True]
+    x = [False, False, True]
 
     # The percentage of occupancy when you want to use cofort mode rather than eco.
     # In other words, setting this to .5 means that kpi calculator prefers eco mode
@@ -52,7 +44,13 @@ def main():
 
 
     if x[0]:
-        print("Prediction results:")
+        print("Prediction results LSTM:")
+        w = CO2PredictionModel()
+        w.predict(train, validation)
+        print()
+
+    if x[1]:
+        print("Prediction results RF:")
         df_man = DataframeManipulator()
         pred = Co2Predictor()
 
@@ -62,7 +60,7 @@ def main():
         print(pred.predict(train_df, validation_df))
         print()
 
-    if x[1]:
+    if x[2]:
         print("Kpi results:")
         kpi_calculator = KPICalculator(OCCUPANCY_THRESHOLD, LOCATION_ID, SCHEME_ID)
         df = kpi_calculator.calculate_kpi(train)
@@ -78,6 +76,9 @@ def main():
         scheme_generator.generate_scheme(df)
 
         print()
+
+    end = time.time()
+    print("Elapsed time in seconds of the main function is: ", end - start)
 
 if __name__ == "__main__":
     main()

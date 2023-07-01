@@ -1,10 +1,13 @@
+<<<<<<< HEAD
 # Random forest co2 predictor
 
 import pandas as pd
+=======
+>>>>>>> a3657e73ccc4957d5fa5f68ebbb1e45c65b4e6ff
 import matplotlib.pyplot as plt
-
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, accuracy_score
+
 
 class Co2Predictor:
     def __init__(self) -> None: 

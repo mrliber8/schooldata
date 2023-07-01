@@ -1,7 +1,5 @@
 import pandas as pd
-import datetime
 
-from sklearn.preprocessing import OneHotEncoder
 
 class DataframeManipulator:
     def __init__(self) -> None:
