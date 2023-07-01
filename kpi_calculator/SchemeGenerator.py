@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 from kpi_calculator.KPICalculator import KPICalculator
@@ -64,7 +65,6 @@ class SchemeGenerator:
         score = self.kpi_calculator.score_scheme(total_occupancy_eco, total_occupancy_comfort)
         print('Score: ', score)
         print()
-        self.chart_scheme_and_occupancy(scheme, df)
 
         return scheme
 

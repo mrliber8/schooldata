@@ -70,11 +70,12 @@ def main():
         original_scheme = kpi_calculator.get_scheme()
         scores_per_hour = scheme_generator.calculate_scores_per_hour(df, original_scheme)
         scheme_generator.suggest_changes(scores_per_hour)
-        prepared_original_scheme = scheme_generator.prepare_scheme_for_chart(original_scheme)
         
-        scheme_generator.chart_scheme_and_occupancy(prepared_original_scheme, df)
-        scheme_generator.generate_scheme(df)
+        generated_scheme = scheme_generator.generate_scheme(df)        
+        prepared_original_scheme = scheme_generator.prepare_scheme_for_chart(original_scheme)
 
+        scheme_generator.chart_scheme_and_occupancy(prepared_original_scheme, df)
+        scheme_generator.chart_scheme_and_occupancy(generated_scheme, df)
         print()
 
     end = time.time()
