@@ -10,11 +10,15 @@ from room_prediction.prediction import Prediction
 
 
 class KPICalculator:
-    def __init__(self, occupancy_threshold) -> None:
+    def __init__(self, occupancy_threshold, location_id, scheme_id) -> None:
         # The percentage of occupancy when you want to use cofort mode rather than eco.
         # In other words, setting this to .5 means that kpi calculator gives more score to eco mode
         #  when the occupancy is lower than 50% and more score to comfort mode when the occupancy is higher than 50%
         self.OCCUPANCY_THRESHOLD = occupancy_threshold
+        self.LOCATION_ID = location_id
+        self.SCHEME_ID = scheme_id
+        # We specify the days of a week because the api returns the days of the week out of order
+        self.DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         pass
 
     def calculate_kpi(self, df):
@@ -49,16 +53,18 @@ class KPICalculator:
         """
         Requests the scheme controlling the heaters from the climatics api and returns
         """
-        r = requests.get('https://climatics.nl/api/location/11/schedule/87', headers={'Authorization': '3b44a419-95ac-4ae3-b9e9-00774a992eee'})
-        return r.json()
+        r = requests.get('https://climatics.nl/api/location/'+str(self.LOCATION_ID)+'/schedule/'+str(self.SCHEME_ID), headers={'Authorization': '3b44a419-95ac-4ae3-b9e9-00774a992eee'})
+        scheme = r.json()
+        
+        # This removes all the data about who created the scheme, when it was created/changed and other stuff we don't use
+        scheme = scheme['days']
+        return scheme
+
 
     def calculate_occupancy(self, df):
         """
         Derives the occupancy from the co2 values
         """
-        # occupancy_predictor = Prediction()
-        # df = occupancy_predictor.main(df)
-        # df = df.rename(columns={'in_room': 'occupancy'})
         df['occupancy'] = [int(x > 500) for x in df[df.columns[0]]]
         del df[df.columns[0]]
 
@@ -74,8 +80,7 @@ class KPICalculator:
         """
         # We use the name of the weekday instead of a number 1 to 7
         #  because it makes it easier to use in the compare_scheme_and_historical_data method
-        days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-        df["weekday"] = [days[i.weekday()] for i in df.index]
+        df["weekday"] = [self.DAYS[i.weekday()] for i in df.index]
 
         # Remove the date portion of the datetime so only the time remains
         df.index = df.index.time
@@ -89,34 +94,20 @@ class KPICalculator:
         Prints the occupancy percentage during both the eco and comfort mode indicated by the scheme
         """
         occupancy_eco, occupancy_comfort = {}, {}
-        # We specify the days of a week because the api returns the days of the week out of order
-        days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-        scheme = scheme['days']
-
-        for day in days:
+        # Only loop through the days present in the dataframe
+        for day in [day for day in self.DAYS if day in df.index]:
+            df_day = df.loc[day]
             # These 2 make sure that when grouping the measurements within a certain mode's timespan
             #  the loop start at start of that timespan
             # With modes we mean eco and comfort
-            index_last_used_measurement, counter = 0, 0
-            occupancy_eco[day], occupancy_comfort[day] = [], []
-            for timespan in scheme[day]:
-                occupancy = []
-                # This for loop groups all the measurements within a certain mode's timespan
-                for measurement in df.loc[day][index_last_used_measurement:].iloc:
-                    # The if is to determine whether measurments were made before the end of the timespan of a certain mode
-                    if(measurement.name < datetime.datetime.strptime(timespan['ends_on'], '%H:%M:%S').time()):
-                        occupancy.append(measurement.occupancy)
-                        counter += 1
-                    else:
-                        index_last_used_measurement = counter
-                        break
+            occupancy_eco[day], occupancy_comfort[day] = self.calculate_occupancy_per_mode(df_day, scheme[day])
+            print(day)
+            self.calculate_average_occupancy(occupancy_eco[day], occupancy_comfort[day])
+            
+            score = self.score_scheme(occupancy_eco[day], occupancy_comfort[day])
+            print('Score: ', score)
+            print()
 
-                # Adds the grouped measurments to either the eco or the comfort list
-                #  depending on which mode was active at according to the scheme
-                if timespan['preset']['name'] == 'Eco':
-                    occupancy_eco[day].extend(occupancy)
-                else:
-                    occupancy_comfort[day].extend(occupancy)
 
         # Prints the occupancy percentages
         total_occupancy_comfort = []
@@ -126,42 +117,70 @@ class KPICalculator:
         total_occupancy_eco = []
         for day in occupancy_eco.values():
             total_occupancy_eco.extend(day)
-
+        
         print('Total')
-        print('comfort: ', round(sum(total_occupancy_comfort) / len(total_occupancy_comfort) * 100), '% bezetting')
-        print('eco:     ', round(sum(total_occupancy_eco) / len(total_occupancy_eco) * 100), '% bezetting')
-        print()
-        score = 0
-        for occupancy in total_occupancy_comfort:
-            score -= self.calculated_score_by_measurement(occupancy)
-        for occupancy in total_occupancy_eco:
-            score += self.calculated_score_by_measurement(occupancy)
-        score += len(total_occupancy_comfort)
-        score /= len(total_occupancy_comfort) + len(total_occupancy_eco)
-        print('Score: ', score)
+        self.calculate_average_occupancy(total_occupancy_eco, total_occupancy_comfort)
 
+        score = self.score_scheme(total_occupancy_eco, total_occupancy_comfort)
+
+        print('Score: ', score)
+        return score
+
+    def calculate_occupancy_per_mode(self, df, scheme):
+        index_last_used_measurement, counter = 0, 0
+        occupancy_eco, occupancy_comfort = [], []
+        for timespan in scheme:
+            occupancy = []
+            # This for loop groups all the measurements within a certain mode's timespan
+            
+            for measurement in df.iloc[index_last_used_measurement:].iloc:
+                # The if is to determine whether measurments were made before the end of the timespan of a certain mode
+                if(measurement.name < datetime.datetime.strptime(timespan['ends_on'], '%H:%M:%S').time()):
+                    occupancy.append(measurement.occupancy)
+                    counter += 1
+                else:
+                    break
+            index_last_used_measurement = counter
+
+            # Adds the grouped measurments to either the eco or the comfort list
+            #  depending on which mode was active at according to the scheme
+            if timespan['preset']['name'] == 'Eco':
+                occupancy_eco.extend(occupancy)
+            else:
+                occupancy_comfort.extend(occupancy)
+        return occupancy_eco, occupancy_comfort
+
+
+    def score_scheme(self, occupancy_eco, occupancy_comfort):
+        score = 0
+        for occupancy in occupancy_comfort:
+            score += self.calculated_score_by_measurement(occupancy)
+        for occupancy in occupancy_eco:
+            score -= self.calculated_score_by_measurement(occupancy)
+        score += len(occupancy_eco)
+        measurement_count = len(occupancy_comfort) + len(occupancy_eco)
+        score /= measurement_count if measurement_count != 0 else 1
+        return score 
+
+    def calculate_average_occupancy(self, occupancy_eco, occupancy_comfort):
+        print('comfort: ', round(sum(occupancy_comfort) / len(occupancy_comfort) * 100)
+              if len(occupancy_comfort) != 0 else '100', '% bezetting')
+        print('eco:     ', round(sum(occupancy_eco) / len(occupancy_eco) * 100)
+              if len(occupancy_eco) != 0 else '100', '% bezetting')
+
+        print()
+
+    def calculate_average_occupancy_per_day(self, occupancy_eco, occupancy_comfort):
+        
         print('Bezettings graad per mode in %:')
         print('day - comfort - eco')
-        for day in days:
+        for day in self.DAYS:
             print(day, ' ' * (9 - len(day)),
                   round(sum(occupancy_comfort[day]) / len(occupancy_comfort[day]) * 100)
                         if len(occupancy_comfort[day]) != 0 else '100',
                   round(sum(occupancy_eco[day]) / len(occupancy_eco[day]) * 100)
                         if len(occupancy_eco[day]) != 0 else '100',
             )
-
-    def score_generated_scheme(self, df, start, end):
-        score = 0
-        for occupancy in df[:start].occupancy:
-            score -= self.calculated_score_by_measurement(occupancy)
-        for occupancy in df[start:end].occupancy:
-            score += self.calculated_score_by_measurement(occupancy)
-        for occupancy in df[end:].occupancy:
-            score -= self.calculated_score_by_measurement(occupancy)
-        score += len(df[:start]) + len(df[end:])
-        score /= len(df)
-        # print (score)
-        return score 
 
     def calculated_score_by_measurement(self, occupancy):
         if occupancy < self.OCCUPANCY_THRESHOLD:

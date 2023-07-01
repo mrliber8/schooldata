@@ -16,7 +16,6 @@ class DataframeManipulator:
 
         Returns the dataframe
         """
-        # df.rename(columns={df.columns[0]: 'co2'}, inplace=True)
         self.split_datetime(df)
         df = self.one_hot_encode(df, "month")
         df = self.one_hot_encode(df, "day")
@@ -42,8 +41,4 @@ class DataframeManipulator:
         df = df.drop(column, axis = 1)
         # Join the encoded df
         df = df.join(one_hot)
-        # encoder = OneHotEncoder(handle_unknown='ignore')
-        # encoder_df = pd.DataFrame(encoder.fit_transform(df[[column]]).toarray())
-        # encoder_df.columns = encoder.get_feature_names_out()
-        # df = df.join(encoder_df)
         return df
